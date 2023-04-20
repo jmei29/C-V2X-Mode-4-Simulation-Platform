@@ -7,12 +7,13 @@
 warning off MATLAB:DeprecatedLogicalAPI
 clear;
 clc;
-addpath('../data_deploy');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  Simulation Initialization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-drop_num = 1;
+
+openfile = sprintf('../simualtion_parameters.mat');
+load(openfile, 'drop_num', 'vehicle_speed');
 sub_drop_num = 10;
 tic
 %% *****        scenario parameters         ********%%
@@ -27,10 +28,8 @@ loca_x_min=-Road_length/2+ISD/2;
 MeNB_num = 2;% MeNB number
 sector_num_per_cell = 3;% sector number per cell
 Total_sec_num = sector_num_per_cell*MeNB_num;% total sector number
-vehicle_speed=70;%Absolute vehicle speed is 70 or 140 km/h
 vehicle_distance=2.5*(vehicle_speed*5/18);%Average inter-vehicle distance in the same lane is 2.5(sec)*absolute vehicle speed(m/s). 
 lambda = floor(Road_length/vehicle_distance);% MUE number per lane,MJ
-
 %% minimum distance between two nodes
 min_distance_VUE_MeNB = 35;% in m , Minimum distance between V-UE and MeNB
 min_distance_VUE_VUE_1 = vehicle_distance;% in m, Minimum separation of two V-UEs
@@ -55,6 +54,9 @@ D_corr_V2I=50; %V2I: Decorrelation distance: 50 m
 D_corr_V2V=25; %V2V: Decorrelation distance: 50 m 
 %and of 1.0 between sectors of the same eNB site are used 
 % save parameters
+if exist('../Data/data_deploy', 'dir') == 0
+        mkdir('../Data/data_deploy');
+end
 savefile = sprintf('../Data/data_deploy/node_deployment_Freeway_parameters_vehicle_speed=%d.mat',vehicle_speed);
 save(savefile,'drop_num','sub_drop_num','ISD','R', ...
     'MeNB_num','sector_num_per_cell','Total_sec_num','Road_length','loca_x_max','loca_x_min',...

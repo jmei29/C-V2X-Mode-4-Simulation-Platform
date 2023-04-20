@@ -1,10 +1,10 @@
 %% System initilization
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Simulation Settings
-scenario_kind = 2;% scenario_kind, Freeway case=2
+%% Simulation Settings: LOAD SET OF configuration
+openfile = sprintf('../simualtion_parameters.mat');
+load(openfile);
 %% Load files FOR MATLAB
-if scenario_kind == 1
-    vehicle_speed=70;
+if scenario_kind == 2
     openfile = sprintf('../Data/data_deploy/node_deployment_Freeway_parameters_vehicle_speed=%d.mat',vehicle_speed);
     load(openfile, 'drop_num', 'sub_drop_num');
     numFrame = 100;% number of simulation frame of ervery subdrop
@@ -12,8 +12,8 @@ end
 drop_num_simu = drop_num; % one drop
 sample_tra_len = drop_num_simu; % the length of sample trajectory
 VUE_ant_gain = 3; %dBi
-Auto_VUE_Tx_pow = 10^(23/10); %in mW
-Safety_VUE_Tx_pow = 10^(23/10); % in mW
+Auto_VUE_Tx_pow = 10^(20/10); %in mW
+Safety_VUE_Tx_pow = 10^(20/10); % in mW
 %% C-V2X MODE 4 FIXED PARAMETERS
 Re_selection_prob = [0.1,0.1];
 % Packet size
@@ -26,15 +26,6 @@ period_safety_serv = 100; % 100 sub-frames for safet related service
 period_auto_serv = 25; % 10 sub-frames for automobile service
 record_pak_num = (sample_tra_len*sub_drop_num*numFrame)/period_auto_serv; 
 % the maximum number of packets to be recorded
-%% LOAD SET OF configuration
-num_of_subchannel =3;
-% 1- subcahnnel num  
-selection_Win_Len = 50;
-% 2- selection window size of 
-MCS_index = 3;
-% 3- MCS index
-Max_num_sub_channel = 4;
-Max_Sensing_Win_len = 100;
 %% OFDM system configuration
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 DL = 1; % 1:DL;else:UL

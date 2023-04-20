@@ -2,9 +2,9 @@ clear all;
 clc;
 % V2V_service_type = 1, Safety related message, Periodic traffic.
 % V2V_service_type = 2, Automobile service, Periodic traffic;
-System_Initialization_C_V2X;
+System_Initialization_C_V2X_Mode4;
 %% Scenario Parameters set
-service_traffic_ratio_set = [1 0];
+service_traffic_ratio_set = [1 1];
 active_ratio_set = [0.25];
 len = length(active_ratio_set);
 active_ratio = active_ratio_set(unidrnd(len));
@@ -64,6 +64,9 @@ for i = 1: sample_tra_len
             end % end of for index_
             %% save files of active UE
             if scenario_kind == 2
+                if exist('../Data/VUE_Tx_INFO', 'dir') == 0
+                    mkdir('../Data/VUE_Tx_INFO');
+                end
                 savefile0 = sprintf('../Data/VUE_Tx_INFO/VUE_Tx_info_Freeway_vehicle_speed=%d_No%d.mat',...
                     vehicle_speed,i);
             end
@@ -88,11 +91,14 @@ for i = 1: sample_tra_len
         end % if sub_snapshot == 1
         %% save files of active UE
         if scenario_kind == 2
+            if exist('../Data/VUE_Tx_INFO', 'dir') == 0
+                mkdir('../Data/VUE_Tx_INFO');
+            end
             savefile1 = sprintf('../Data/VUE_Tx_INFO/VUE_Tx_info_Freeway_vehicle_speed=%d_No%d_subdrop_ID%d.mat',...
                 vehicle_speed,i, sub_snapshot);
         end
         save(savefile1, 'active_VUE_Rx_index');
         %% print
-        %fprintf('\n snapshot=%d, sub_snapshot_ID=%d.\n', loop_drop, sub_snapshot);
+        fprintf('\n snapshot=%d, sub_snapshot_ID=%d.\n', loop_drop, sub_snapshot);
     end %end of sub_snapshot
 end %end of loop_drop\

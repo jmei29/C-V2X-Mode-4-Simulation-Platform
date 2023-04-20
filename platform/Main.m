@@ -3,16 +3,15 @@
 tic; % clacluate the time
 clc
 clear
-System_Initialization_C_V2X;
+System_Initialization_C_V2X_Mode4;
 fprintf('%% *****  C-V2X mode 4: Proposed DRL scheme Version 4.   ***** %%\n');
 break_flag = 0;
 warning off all;
-CASE_IDX = 1;
 %% settings for simulations
 episode = 1;
 File_index = 1;
-MAX_epsiode = 10;
 sample_num = 1;
+Rician_factor = 1;
 %% TRAINING PROCESS
 while 1
     if episode >= MAX_epsiode
@@ -25,14 +24,6 @@ while 1
     PDR_record = cell(sample_tra_len, 1);
     active_VUE_service_type_record = cell(sample_tra_len, 1);
     Packet_Delay = cell(sample_tra_len, 1);
-    %% Data saved in each drop
-    sample_observe_state = zeros(sample_tra_len, 11); %record
-    Policy_Prob_list = zeros(sample_tra_len, num_action + 1);
-    action_Prob_seq = zeros(sample_tra_len, num_action); %
-    action_record = zeros(sample_tra_len, 1);
-    observe_states_for_Python = zeros(input_trace_length, 6);
-    % observe_states_for_Python_Train  = zeros((sample_tra_len - 1)*input_trace_length, 6);
-    observe_states_for_Python_Train  = zeros((sample_tra_len - 1), input_trace_length, 6);
     %% A sample trajectory is generated
     for loop_drop = 1 : sample_tra_len
         fprintf(' Episode_idx=%d, loop_drop=%d.\n',episode, loop_drop);
@@ -42,7 +33,7 @@ while 1
         end
         %% load information of V2V scenario;
         % Slow fading channel inforamtion load
-        if scenario_kind == 1
+        if scenario_kind == 2
             openfile1 = sprintf('../Data/channel_storage/slowfading_V2V_V2C_Freeway_vehicle_speed=%d_No%d.mat',...
                 vehicle_speed,loop_drop_);
             openfile2 = sprintf('../Data/VUE_Tx_INFO/VUE_Tx_info_Freeway_vehicle_speed=%d_No%d.mat',...
@@ -75,16 +66,16 @@ while 1
         % the reserve sub-channel idex of each pakcet
         %% Variable Setting
         Sensing_period = zeros(Max_Sensing_Win_len, Max_num_sub_channel, active_VUE_num);
-        Collision_Ratio_record = cell(sub_drop_num, 2);
-        Congestion_Ratio_record = cell(sub_drop_num, 2);
+        Collision_Ratio_record = cell(sub_drop_num, 1);
+        Congestion_Ratio_record = cell(sub_drop_num, 1);
         Data_rate_record = cell(sub_drop_num, 1);
-        SubCH_choice = cell(sub_drop_num, 2);
+        SubCH_choice = cell(sub_drop_num, 1);
         SINR_sc_record = cell(sub_drop_num, 1);
         VUE_Rx_S_power_per_sc_mW_record = cell(sub_drop_num, 1);
         VUE_Rx_I_power_per_sc_mW_record = cell(sub_drop_num, 1);
         VUE_Rx_CIR_per_sc_record = cell(sub_drop_num, 2);
         for loop_sub_drop = 1 : sub_drop_num
-            if scenario_kind == 1
+            if scenario_kind == 2
                 openfile3 = sprintf('../Data/VUE_Tx_INFO/VUE_Tx_info_Freeway_vehicle_speed=%d_No%d_subdrop_ID%d.mat',...
                     vehicle_speed,loop_drop, loop_sub_drop);
             end
@@ -136,16 +127,6 @@ while 1
                         pak_bits(pak_count(loop_VUE_Tx,1)+1:pak_count(loop_VUE_Tx,1)+arrive_pak_num,loop_VUE_Tx) = ...
                             pak_bits_safey;
                         pak_count(loop_VUE_Tx,1) = pak_count(loop_VUE_Tx,1)+arrive_pak_num;
-                    elseif active_VUE_service_type(loop_VUE_Tx) == 2 && ... % Automobile service
-                            mod(time_index, period_auto_serv) == start_instance_periodic_traffic(loop_VUE_Tx)
-                        arrive_pak_num = 1;
-                        % the number of packet arrive at this frame FOR automobile related service
-                        pak_arrive_frame_index(pak_count(loop_VUE_Tx,1)+1:...
-                            pak_count(loop_VUE_Tx,1)+arrive_pak_num, loop_VUE_Tx) = time_index;
-                        % record arriving time index
-                        pak_bits(pak_count(loop_VUE_Tx,1)+1:pak_count(loop_VUE_Tx,1)+arrive_pak_num,loop_VUE_Tx) = ...
-                            pak_bits_auto;
-                        pak_count(loop_VUE_Tx,1) = pak_count(loop_VUE_Tx,1)+arrive_pak_num;
                     end % end of "if active_VUE_service_type(loop_VUE_Tx) == 1 % safety related message"
                     % IF there is no data to be transmitted and buffer is not emtpy, WE LOAD data to transmit
                     if bits_need_transmit(loop_VUE_Tx,1) == 0 && ...
@@ -176,29 +157,6 @@ while 1
                                 wait_time_per_pak(transmit_pak_index(loop_VUE_Tx,1), loop_VUE_Tx)  = waiting_time;
                                 pak_reserve_sub_CH_idx(transmit_pak_index(loop_VUE_Tx,1), loop_VUE_Tx) = sub_CH_idx;
                             end
-                        else  % Automobile service
-                            if transmit_pak_index(loop_VUE_Tx,1) > 1 && rand < 1 - Re_selection_prob(2)
-                                % Stick to current Subchannel
-                                pak_leave_frame_index(transmit_pak_index(loop_VUE_Tx,1), loop_VUE_Tx) = ...
-                                    time_index + wait_time_per_pak(transmit_pak_index(loop_VUE_Tx,1) - 1,...
-                                    loop_VUE_Tx);
-                                wait_time_per_pak(transmit_pak_index(loop_VUE_Tx,1), loop_VUE_Tx) = ...
-                                    wait_time_per_pak(transmit_pak_index(loop_VUE_Tx,1) - 1, loop_VUE_Tx);
-                                pak_reserve_sub_CH_idx(transmit_pak_index(loop_VUE_Tx,1), loop_VUE_Tx) = ...
-                                    pak_reserve_sub_CH_idx(transmit_pak_index(loop_VUE_Tx,1) - 1,...
-                                    loop_VUE_Tx);
-                            else
-                                % Reselect
-                                Sensing_Result = Gen_Sensing_Result(Sensing_period, Sensing_Win_len(2), Sub_channel_num(2), ...
-                                    Selection_Win_Len(2), loop_VUE_Tx);
-                                [waiting_time, sub_CH_idx] = Sensing_based_SPS(Sensing_Result, Selection_Win_Len(2));
-                                pak_leave_frame_index(transmit_pak_index(loop_VUE_Tx,1), loop_VUE_Tx) = ...
-                                    time_index  + waiting_time;
-                                wait_time_per_pak(transmit_pak_index(loop_VUE_Tx,1), loop_VUE_Tx)  = ...
-                                    waiting_time;
-                                pak_reserve_sub_CH_idx(transmit_pak_index(loop_VUE_Tx,1), loop_VUE_Tx) = ...
-                                    sub_CH_idx;
-                            end
                         end % end of IF service type
                         %% Delay Calculate
                         delay_per_pak(transmit_pak_index(loop_VUE_Tx,1), loop_VUE_Tx) = ...
@@ -217,6 +175,9 @@ while 1
                 VUE_Rx_S_power_per_sc = zeros(active_VUE_num, 1);  %sc=subcarrier
                 %% the receive power of VUE Rx
                 for loop_VUE_Tx = 1:active_VUE_num
+                    if active_VUE_service_type(loop_VUE_Tx) ~= 1
+                        continue;
+                    end
                     if transmit_pak_index(loop_VUE_Tx,1)>0 && pak_leave_frame_index(...
                             transmit_pak_index(loop_VUE_Tx,1), loop_VUE_Tx) == time_index ...
                             &&  active_VUE_service_type(loop_VUE_Tx) == 1
@@ -238,6 +199,8 @@ while 1
                     scheduled_VUE_SubCH(loop_VUE_Tx) = sub_CH_index;
                     VUE_Tx_idx = active_VUE_index(loop_VUE_Tx);
                     VUE_Rx_idx = active_VUE_Rx_index(loop_VUE_Tx);
+                    h_rayleigh = sqrt(1/2) *(randn(1,1) + 1i*randn(1,1));
+                    
                     VUE_Rx_S_power_per_sc(loop_VUE_Tx, 1) = VUE_power_per_sc(loop_VUE_Tx, 1)*...
                         VUE2VUE_Large_scale_fading(VUE_Tx_idx, VUE_Rx_idx)*10^(VUE_ant_gain/10);
                     % Record data
@@ -279,25 +242,10 @@ while 1
                     Collision_Ratio_Slice1(loop_frame, :) = [collision_num, Total_transmission_num, collision_num/Total_transmission_num];
                     Congestion_Ratio_Slice1(loop_frame, 1) = channel_opccpuy_num/Sub_channel_num(1);
                 end
-                %---------------------Slice #2---------------------%
-                temp2 = scheduled_VUE_SubCH(active_VUE_service_type == 2);
-                scheduled_VUE_Slice2_SubCH_snapshot(:, loop_frame) = temp2;
-                Total_transmission_num = sum(temp2>0);
-                if Total_transmission_num > 0
-                    collision_num = 0; % Calculate the collolison frequency in slice 1 at current frame
-                    channel_opccpuy_num = 0;
-                    for i = 1 : Sub_channel_num(2)
-                        temp_num = sum(temp2 == i);
-                        collision_num = collision_num + (temp_num>1)*temp_num;
-                        channel_opccpuy_num = channel_opccpuy_num + (temp_num>=1);
-                    end
-                    Collision_Ratio_Slice2(loop_frame, :) = [collision_num, Total_transmission_num, collision_num/Total_transmission_num];
-                    Congestion_Ratio_Slice2(loop_frame, 1) = channel_opccpuy_num/Sub_channel_num(2);
-                end
                 %% INTERFERENCE from other VUE Txs to VUE Rx
                 VUE_Rx_I_power_per_sc = zeros(active_VUE_num, active_VUE_num);
                 for loop_VUE_Tx = 1 : active_VUE_num
-                    if scheduled_VUE_SubCH(loop_VUE_Tx) == 0
+                    if scheduled_VUE_SubCH(loop_VUE_Tx) == 0 || active_VUE_service_type(loop_VUE_Tx) ~= 1
                         continue;
                     end
                     for loop_interfered_VUE_Tx = 1 : active_VUE_num
@@ -326,7 +274,7 @@ while 1
                 VUE_Rx_CIR_per_sc = zeros(1, active_VUE_num);
                 % the SINR of VUE Tx in each subcarrier in each RB
                 for loop_VUE_Tx = 1 : active_VUE_num
-                    if scheduled_VUE_SubCH(loop_VUE_Tx) == 0
+                    if scheduled_VUE_SubCH(loop_VUE_Tx) == 0 || active_VUE_service_type(loop_VUE_Tx) ~= 1
                         continue;
                     end
                     channel_gain_S_VUE_Rx_sc = norm(sqrt(Rician_fading_factor/(Rician_fading_factor+1)) + ...
@@ -366,34 +314,29 @@ while 1
             VUE_Rx_CIR_per_sc_record{loop_sub_drop, 1} = VUE_Rx_CIR_per_sc_Slice1_snapshot;
             VUE_Rx_CIR_per_sc_record{loop_sub_drop, 2} = VUE_Rx_CIR_per_sc_Slice2_snapshot;
             SubCH_choice{loop_sub_drop, 1} = scheduled_VUE_Slice1_SubCH_snapshot;
-            SubCH_choice{loop_sub_drop, 2} = scheduled_VUE_Slice2_SubCH_snapshot;
-            Congestion_Ratio_record{loop_sub_drop, 1} = Congestion_Ratio_Slice1;
-            Congestion_Ratio_record{loop_sub_drop, 2} = Congestion_Ratio_Slice2;
-            Collision_Ratio_record{loop_sub_drop, 1} = Collision_Ratio_Slice1;
-            Collision_Ratio_record{loop_sub_drop, 2} = Collision_Ratio_Slice2;
+            Congestion_Ratio_record{loop_sub_drop, 1} = Congestion_Ratio_Slice1(Congestion_Ratio_Slice1>0);
+            Collision_Ratio_record{loop_sub_drop, 1} = Collision_Ratio_Slice1(Collision_Ratio_Slice1(:,2)>0, :);
         end % end of sub_snapshot
         %% Obtain current observe state
         % Packet delay related metric
         Delay_1 = delay_per_pak.*repmat(transpose(active_VUE_service_type == 1), record_pak_num, 1);
         Delay_1 = Delay_1(Delay_1 > 0);
         Delay_avg(loop_drop, 1) = mean(Delay_1(:));
-        Delay_2 = delay_per_pak.*repmat(transpose(active_VUE_service_type == 2), record_pak_num, 1);
-        Delay_2 = Delay_2(Delay_2 > 0);
-        Delay_avg(loop_drop, 2) = mean(Delay_2(:));
         % PDR related metric
         PDR_1 = PDR_active_VUE.*repmat(transpose(active_VUE_service_type == 1), record_pak_num, 1);
         PDR_1 = PDR_1(PDR_1 > 0);
         PDR_avg(loop_drop, 1) = max(mean(PDR_1(:)), 10^-4);
-        PDR_2 = PDR_active_VUE.*repmat(transpose(active_VUE_service_type == 2), record_pak_num, 1);
-        PDR_2 = PDR_2(PDR_2 > 0);
-        PDR_avg(loop_drop, 2) = max(mean(PDR_2(:)), 10^-4);
         %% Data Record
         PDR_record{loop_drop, 1} = PDR_active_VUE;
         Packet_Delay{loop_drop, 1} = delay_per_pak;
         %% Save data FOR analysis
-        savefile = sprintf('../Data/Result_DRL_Propose/V2V_single_cell_speed%d_drop%d_Sample%d_Case_%d_v4_1.mat',...
+        if exist('../Data/Result', 'dir') == 0
+            mkdir('../Data/Result');
+        end
+        savefile = sprintf('../Data/Result/V2V_Mode_4_speed%d_drop%d_Sample%d_Case_%d.mat',...
             vehicle_speed, sample_num, CASE_IDX);
-        save(savefile, 'Data_rate_record', 'SINR_sc_record', 'VUE_Rx_CIR_per_sc_record','SubCH_choice','Collision_Ratio_record','Congestion_Ratio_record',...
+        save(savefile, 'Data_rate_record', 'SINR_sc_record', 'VUE_Rx_CIR_per_sc_record','SubCH_choice',...
+            'Collision_Ratio_record','Congestion_Ratio_record',...
             'delay_per_pak','PDR_active_VUE','Delay_1','PDR_1');
     end % end of loop_drop
     %% Renew episode/File_index number
