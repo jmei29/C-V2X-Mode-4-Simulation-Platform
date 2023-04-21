@@ -26,4 +26,4 @@ cd('../platform/')
 Generate_Service_Traffic_Dynamics;
 Main;
 %% simulation result analysis
-
+Result_Analysis;
