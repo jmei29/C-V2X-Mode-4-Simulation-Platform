@@ -11,7 +11,7 @@ warning off all;
 episode = 1;
 File_index = 1;
 sample_num = 1;
-Rician_factor = 1;
+
 %% TRAINING PROCESS
 while 1
     if episode >= MAX_epsiode
@@ -68,9 +68,9 @@ while 1
         Sensing_period = zeros(Max_Sensing_Win_len, Max_num_sub_channel, active_VUE_num);
         Collision_Ratio_record = cell(sub_drop_num, 1);
         Congestion_Ratio_record = cell(sub_drop_num, 1);
-        Data_rate_record = cell(sub_drop_num, 1);
+        Data_rate_record = cell(1, 1);
         SubCH_choice = cell(sub_drop_num, 1);
-        SINR_sc_record = cell(sub_drop_num, 1);
+        SINR_sc_record = cell(1, 1);
         VUE_Rx_S_power_per_sc_mW_record = cell(sub_drop_num, 1);
         VUE_Rx_I_power_per_sc_mW_record = cell(sub_drop_num, 1);
         VUE_Rx_CIR_per_sc_record = cell(sub_drop_num, 2);
@@ -307,8 +307,6 @@ while 1
                 time_index = time_index + 1;
             end % end of loop_frame
             %% Data Record
-            Data_rate_record{loop_sub_drop, 1} = total_data_rate;
-            SINR_sc_record{loop_sub_drop, 1} = SINR_active_VUE;
             VUE_Rx_S_power_per_sc_mW_record{loop_sub_drop, 1} = VUE_Rx_S_power_per_sc_mW;
             VUE_Rx_I_power_per_sc_mW_record{loop_sub_drop, 1} = VUE_Rx_I_power_per_sc_mW;
             VUE_Rx_CIR_per_sc_record{loop_sub_drop, 1} = VUE_Rx_CIR_per_sc_Slice1_snapshot;
@@ -317,6 +315,8 @@ while 1
             Congestion_Ratio_record{loop_sub_drop, 1} = Congestion_Ratio_Slice1(Congestion_Ratio_Slice1>0);
             Collision_Ratio_record{loop_sub_drop, 1} = Collision_Ratio_Slice1(Collision_Ratio_Slice1(:,2)>0, :);
         end % end of sub_snapshot
+        Data_rate_record{1, 1} = total_data_rate;
+        SINR_sc_record{1, 1} = SINR_active_VUE;
         %% Obtain current observe state
         % Packet delay related metric
         Delay_1 = delay_per_pak.*repmat(transpose(active_VUE_service_type == 1), record_pak_num, 1);
@@ -343,3 +343,4 @@ while 1
     episode = episode + 1; % calculate the number of episodes
     sample_num = sample_num + 1; % calculate the number of samples
 end % end of WHILE
+toc;
