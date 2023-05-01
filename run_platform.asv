@@ -2,7 +2,7 @@
 CASE_IDX = 1;
 scenario_kind = 2;% scenario_kind, Freeway case=2
 drop_num = 20;
-MAX_epsiode = 20;
+MAX_epsiode = 2;
 Max_Sensing_Win_len = 200;
 vehicle_speed=70; % 50, 70, 90, 110, 120
 num_of_subchannel = 3; % 1- subcahnnel num: 3, 4, 5, 6
