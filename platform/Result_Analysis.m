@@ -36,8 +36,11 @@ while 1
     sample_num = sample_num + 1; % calculate the number of samples
 end % end of while
 %%
+%-----------------% related to sub_channel_number, vehicle_speed
 fprintf('Case Index = %d, Average SINR per Subcarrier = %f dB.\n', CASE_IDX, 10*log10(mean(SINR_sc_record_all)));
-fprintf('Case Index = %d, Average Congestion Ratio = %f dB.\n', CASE_IDX, mean(Congestion_Ratio_record_all(:)));
-fprintf('Case Index = %d, Average Collision Ratio = %f dB.\n', CASE_IDX, mean(Collision_Ratio_record_all(:)));
-fprintf('Case Index = %d, Average Packet Drop Ratio = %f dB.\n', CASE_IDX, mean(Packet_drop_ratio_record_all(:)));
-fprintf('Case Index = %d, Average Packet Delay = %f dB.\n', CASE_IDX, mean(Packet_delay_record_all(:)));
+fprintf('Case Index = %d, Average Congestion Ratio = %f.\n', CASE_IDX, mean(Congestion_Ratio_record_all(:)));
+fprintf('Case Index = %d, Average Collision Ratio = %f.\n', CASE_IDX, mean(Collision_Ratio_record_all(:)));
+%----------% related to sub_channel_number, vehicle_speed, MCS_index
+fprintf('Case Index = %d, Average Packet Drop Ratio = %f.\n', CASE_IDX, mean(Packet_drop_ratio_record_all(:)));
+fprintf('Case Index = %d, Average Packet Delay = %f ms.\n', CASE_IDX, mean(Packet_delay_record_all(:)));
+% 
